@@ -310,6 +310,25 @@ fn calculate_dir_size(path: &std::path::Path) -> std::io::Result<u64> {
         .try_reduce(|| 0, |a, b| Ok(a + b))
 }
 
+fn needs_directory_sizes(args: &Args) -> bool {
+    if !args.include_dirs {
+        return false;
+    }
+
+    // Machine-readable output should retain complete metadata.
+    if !matches!(args.output_mode, OutputMode::Human) {
+        return true;
+    }
+
+    // Preserve size-aware behavior for views and operations that consume size.
+    args.long_format
+        || args.table_format
+        || args.sizemap_format
+        || args.fuzzy_format
+        || args.sort_by == "size"
+        || args.size_filter.is_some()
+}
+
 pub fn list_and_decorate_files(
     args: &Args,
     config: &Config,
@@ -327,6 +346,8 @@ pub fn list_and_decorate_files(
             args.depth,
         )?
     };
+
+    let should_calculate_dir_sizes = needs_directory_sizes(args);
 
     let entries: Vec<DecoratedEntry> = raw_paths
         .into_par_iter()
@@ -423,7 +444,7 @@ pub fn list_and_decorate_files(
                 return None;
             }
 
-            if args.include_dirs && metadata.is_dir {
+            if should_calculate_dir_sizes && metadata.is_dir {
                 if let Ok(dir_size) = calculate_dir_size(&path) {
                     metadata.size = dir_size;
                 }

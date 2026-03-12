@@ -266,7 +266,7 @@ lla --timeline
 Visual disk usage insights:
 
 ```bash
-lla -S # use --include-dirs to calculate directories sizes
+lla -S # use --include-dirs to calculate directory sizes (recursive; slower on large trees)
 ```
 
 <img src="https://github.com/user-attachments/assets/dad703ec-ef23-460b-9b9c-b5c5d6595300" className="rounded-2xl" alt="sizemap" />
@@ -558,6 +558,7 @@ lla --csv
 | --------------------- | ------------------------------------------------------------------------------------- | ------------------------------- |
 | `--icons`             | Show icons for files and directories                                                  | `lla --icons`                   |
 | `--no-icons`          | Hide icons for files and directories                                                  | `lla --no-icons`                |
+| `--include-dirs`      | Include recursive directory sizes in metadata (expensive on large directory trees)   | `lla -l --include-dirs`         |
 | `--no-color`          | Disable all colors in the output                                                      | `lla --no-color`                |
 | `--permission-format` | Set the format for displaying permissions (symbolic, octal, binary, verbose, compact) | `lla --permission-format octal` |
 
