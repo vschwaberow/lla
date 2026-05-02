@@ -133,8 +133,8 @@ lazy_static! {
             "extract",
             "extract <file_path> <snippet_name> <start_line> <end_line> [context_lines]",
             "Extract a code snippet from a file",
-            vec!["lla plugin --name code_snippet_extractor --action extract --args \"file.rs\" \"my_func\" 10 20"],
-            |args| CodeSnippetExtractorPlugin::extract_action(args)
+            ["lla plugin --name code_snippet_extractor --action extract --args \"file.rs\" \"my_func\" 10 20"],
+            CodeSnippetExtractorPlugin::extract_action
         );
 
         lla_plugin_utils::define_action!(
@@ -142,11 +142,11 @@ lazy_static! {
             "list",
             "list [file_path]",
             "List all snippets, optionally filtered by file",
-            vec![
+            [
                 "lla plugin --name code_snippet_extractor --action list",
                 "lla plugin --name code_snippet_extractor --action list --args \"file.rs\""
             ],
-            |args| CodeSnippetExtractorPlugin::list_action(args)
+            CodeSnippetExtractorPlugin::list_action
         );
 
         lla_plugin_utils::define_action!(
@@ -154,8 +154,8 @@ lazy_static! {
             "get",
             "get <snippet_id>",
             "Get a specific snippet by ID",
-            vec!["lla plugin --name code_snippet_extractor --action get --args \"abc123\""],
-            |args| CodeSnippetExtractorPlugin::get_action(args)
+            ["lla plugin --name code_snippet_extractor --action get --args \"abc123\""],
+            CodeSnippetExtractorPlugin::get_action
         );
 
         lla_plugin_utils::define_action!(
@@ -163,8 +163,8 @@ lazy_static! {
             "search",
             "search <query>",
             "Search through all snippets",
-            vec!["lla plugin --name code_snippet_extractor --action search --args \"function\""],
-            |args| CodeSnippetExtractorPlugin::search_action(args)
+            ["lla plugin --name code_snippet_extractor --action search --args \"function\""],
+            CodeSnippetExtractorPlugin::search_action
         );
 
         lla_plugin_utils::define_action!(
@@ -172,8 +172,8 @@ lazy_static! {
             "add-tags",
             "add-tags <snippet_id> <tag1> [tag2...]",
             "Add tags to a snippet",
-            vec!["lla plugin --name code_snippet_extractor --action add-tags --args \"abc123\" \"rust\" \"function\""],
-            |args| CodeSnippetExtractorPlugin::add_tags_action(args)
+            ["lla plugin --name code_snippet_extractor --action add-tags --args \"abc123\" \"rust\" \"function\""],
+            CodeSnippetExtractorPlugin::add_tags_action
         );
 
         lla_plugin_utils::define_action!(
@@ -181,8 +181,8 @@ lazy_static! {
             "remove-tags",
             "remove-tags <snippet_id> <tag1> [tag2...]",
             "Remove tags from a snippet",
-            vec!["lla plugin --name code_snippet_extractor --action remove-tags --args \"abc123\" \"rust\""],
-            |args| CodeSnippetExtractorPlugin::remove_tags_action(args)
+            ["lla plugin --name code_snippet_extractor --action remove-tags --args \"abc123\" \"rust\""],
+            CodeSnippetExtractorPlugin::remove_tags_action
         );
 
         lla_plugin_utils::define_action!(
@@ -190,7 +190,7 @@ lazy_static! {
             "help",
             "help",
             "Show help information",
-            vec!["lla plugin --name code_snippet_extractor --action help"],
+            ["lla plugin --name code_snippet_extractor --action help"],
             |_| CodeSnippetExtractorPlugin::help_action()
         );
 
@@ -199,7 +199,7 @@ lazy_static! {
             "list-categories",
             "list-categories",
             "List all available categories",
-            vec!["lla plugin --name code_snippet_extractor --action list-categories"],
+            ["lla plugin --name code_snippet_extractor --action list-categories"],
             |_| CodeSnippetExtractorPlugin::list_categories_action()
         );
 
@@ -208,8 +208,8 @@ lazy_static! {
             "list-by-category",
             "list-by-category <category>",
             "List all snippets in a category",
-            vec!["lla plugin --name code_snippet_extractor --action list-by-category --args \"algorithms\""],
-            |args| CodeSnippetExtractorPlugin::list_by_category_action(args)
+            ["lla plugin --name code_snippet_extractor --action list-by-category --args \"algorithms\""],
+            CodeSnippetExtractorPlugin::list_by_category_action
         );
 
         lla_plugin_utils::define_action!(
@@ -217,8 +217,8 @@ lazy_static! {
             "set-category",
             "set-category <snippet_id> <category>",
             "Set or change the category of a snippet",
-            vec!["lla plugin --name code_snippet_extractor --action set-category --args \"abc123\" \"algorithms\""],
-            |args| CodeSnippetExtractorPlugin::set_category_action(args)
+            ["lla plugin --name code_snippet_extractor --action set-category --args \"abc123\" \"algorithms\""],
+            CodeSnippetExtractorPlugin::set_category_action
         );
 
         lla_plugin_utils::define_action!(
@@ -226,11 +226,11 @@ lazy_static! {
             "export",
             "export <file_path> [snippet_ids...]",
             "Export snippets to a JSON file",
-            vec![
+            [
                 "lla plugin --name code_snippet_extractor --action export --args \"snippets.json\"",
                 "lla plugin --name code_snippet_extractor --action export --args \"snippets.json\" \"abc123\" \"def456\""
             ],
-            |args| CodeSnippetExtractorPlugin::export_action(args)
+            CodeSnippetExtractorPlugin::export_action
         );
 
         lla_plugin_utils::define_action!(
@@ -238,10 +238,8 @@ lazy_static! {
             "import",
             "import <file_path>",
             "Import snippets from a JSON file",
-            vec![
-                "lla plugin --name code_snippet_extractor --action import --args \"snippets.json\""
-            ],
-            |args| CodeSnippetExtractorPlugin::import_action(args)
+            ["lla plugin --name code_snippet_extractor --action import --args \"snippets.json\""],
+            CodeSnippetExtractorPlugin::import_action
         );
 
         registry
@@ -298,7 +296,7 @@ impl CodeSnippetExtractorPlugin {
     }
 
     fn detect_language(file_path: &str) -> String {
-        match file_path.split('.').last() {
+        match file_path.split('.').next_back() {
             Some("rs") => "rust",
             Some("py") => "python",
             Some("js") => "javascript",
@@ -411,7 +409,7 @@ impl CodeSnippetExtractorPlugin {
             })
             .collect();
 
-        matches.sort_by(|a, b| b.1.cmp(&a.1));
+        matches.sort_by_key(|hit| std::cmp::Reverse(hit.1));
         matches.into_iter().map(|(snippet, _)| snippet).collect()
     }
 
@@ -449,9 +447,9 @@ impl CodeSnippetExtractorPlugin {
         } else {
             let mut width = 0;
             let mut result = String::new();
-            let mut chars = s.chars();
+            let chars = s.chars();
 
-            while let Some(c) = chars.next() {
+            for c in chars {
                 let char_width = console::measure_text_width(&c.to_string());
                 if width + char_width + 3 > max_width {
                     result.push_str("...");
@@ -641,7 +639,7 @@ impl CodeSnippetExtractorPlugin {
 
     fn list_action(args: &[String]) -> Result<(), String> {
         let plugin = Self::new();
-        let snippets = if let Some(file_path) = args.get(0) {
+        let snippets = if let Some(file_path) = args.first() {
             plugin.list_snippets_by_file(file_path)
         } else {
             plugin.list_snippets()
