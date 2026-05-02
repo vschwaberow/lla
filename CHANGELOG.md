@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-05-02
+
 ### Fixed
 
 - Avoid recursive directory size calculation in non-size views, improving performance for large parent directories when `include_dirs = true` while preserving recursive sizing for size-aware outputs and filters. Thanks to @Maanas-Verma for the fix in [#154](https://github.com/chaqchase/lla/pull/154).
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Merging the release-prep PR now creates the matching `vX.Y.Z` tag automatically and runs the release pipeline.
   - Release publishing now builds and verifies all binaries, plugin archives, OS packages, themes, and checksums before publishing crates.io packages and the GitHub release.
   - Changelog entries can now be written under `## [Unreleased]`; the prepare workflow promotes that section to the target version and leaves a fresh `## [Unreleased]` section.
+
 
 ## [0.5.4] - 2026-01-29
 
