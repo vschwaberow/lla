@@ -295,14 +295,12 @@ where
                 selected = 0;
                 needs_render = true;
             }
-            Key::Char(c) => {
-                // Basic text input
-                if !c.is_control() {
-                    input.push(c);
-                    selected = 0;
-                    needs_render = true;
-                }
+            Key::Char(c) if !c.is_control() => {
+                input.push(c);
+                selected = 0;
+                needs_render = true;
             }
+            Key::Char(_) => {}
             Key::ArrowDown => {
                 let total = 1 + suggestions.len().min(MAX_SUGGESTIONS);
                 if total > 0 {
