@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Avoid recursive directory size calculation in non-size views, improving performance for large parent directories when `include_dirs = true` while preserving recursive sizing for size-aware outputs and filters. Thanks to @Maanas-Verma for the fix in [#154](https://github.com/chaqchase/lla/pull/154).
+
 ### Changed
 
 - Reworked releases into a shorter prepare-and-merge flow:
