@@ -393,7 +393,7 @@ impl GoogleSearchPlugin {
                 }
 
                 let mut freq_vec: Vec<_> = freq.into_iter().collect();
-                freq_vec.sort_by(|a, b| b.1.cmp(&a.1));
+                freq_vec.sort_by_key(|entry| std::cmp::Reverse(entry.1));
 
                 if !freq_vec.is_empty() {
                     println!("\n{} Top 5 searches:", "🔥".bright_yellow());

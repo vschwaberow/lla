@@ -15,8 +15,9 @@ use std::time::Duration;
 
 const HN_API_BASE: &str = "https://hacker-news.firebaseio.com/v0";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HNTopic {
+    #[default]
     Top,
     Best,
     New,
@@ -79,12 +80,6 @@ impl HNTopic {
             HNTopic::Show,
             HNTopic::Jobs,
         ]
-    }
-}
-
-impl Default for HNTopic {
-    fn default() -> Self {
-        HNTopic::Top
     }
 }
 
@@ -249,15 +244,16 @@ impl HackerNewsPlugin {
 
     fn header(&self, title: &str) {
         let cfg = self.base.config();
+        let summary = format!(
+            "Default topic: {}  Stories: {}  Cache: {}s",
+            cfg.default_topic.name().bright_cyan(),
+            cfg.story_count.to_string().bright_yellow(),
+            cfg.cache_duration_secs.to_string().bright_black()
+        );
         let content = format!(
             "{}\n{}\n{}",
             "Mini TUI for Hacker News. Browse, open links, and copy URLs.".bright_black(),
-            format!(
-                "Default topic: {}  Stories: {}  Cache: {}s",
-                cfg.default_topic.name().bright_cyan(),
-                cfg.story_count.to_string().bright_yellow(),
-                cfg.cache_duration_secs.to_string().bright_black()
-            ),
+            summary,
             "Tip: use the interactive browser for the best experience.".bright_black()
         );
         println!(
@@ -787,7 +783,7 @@ impl HackerNewsPlugin {
                     .default(self.base.config().story_count)
                     .interact_text()
                     .map_err(|e| format!("Failed to get input: {}", e))?;
-                self.base.config_mut().story_count = count.max(5).min(100);
+                self.base.config_mut().story_count = count.clamp(5, 100);
                 self.base.save_config().map_err(|e| e.to_string())?;
                 Ok(())
             }
@@ -797,7 +793,7 @@ impl HackerNewsPlugin {
                     .default(self.base.config().cache_duration_secs)
                     .interact_text()
                     .map_err(|e| format!("Failed to get input: {}", e))?;
-                self.base.config_mut().cache_duration_secs = secs.max(30).min(3600);
+                self.base.config_mut().cache_duration_secs = secs.clamp(30, 3600);
                 self.base.save_config().map_err(|e| e.to_string())?;
                 Ok(())
             }
