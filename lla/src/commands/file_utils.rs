@@ -310,6 +310,25 @@ fn calculate_dir_size(path: &std::path::Path) -> std::io::Result<u64> {
         .try_reduce(|| 0, |a, b| Ok(a + b))
 }
 
+fn needs_directory_sizes(args: &Args) -> bool {
+    if !args.include_dirs {
+        return false;
+    }
+
+    // Machine-readable output should retain complete metadata.
+    if !matches!(args.output_mode, OutputMode::Human) {
+        return true;
+    }
+
+    // Preserve size-aware behavior for views and operations that consume size.
+    args.long_format
+        || args.table_format
+        || args.sizemap_format
+        || args.fuzzy_format
+        || args.sort_by == "size"
+        || args.size_filter.is_some()
+}
+
 pub fn list_and_decorate_files(
     args: &Args,
     config: &Config,
@@ -327,6 +346,8 @@ pub fn list_and_decorate_files(
             args.depth,
         )?
     };
+
+    let should_calculate_dir_sizes = needs_directory_sizes(args);
 
     let entries: Vec<DecoratedEntry> = raw_paths
         .into_par_iter()
@@ -423,7 +444,7 @@ pub fn list_and_decorate_files(
                 return None;
             }
 
-            if args.include_dirs && metadata.is_dir {
+            if should_calculate_dir_sizes && metadata.is_dir {
                 if let Ok(dir_size) = calculate_dir_size(&path) {
                     metadata.size = dir_size;
                 }
@@ -940,7 +961,7 @@ impl ListingContext {
             depth: args.depth,
             tree_format: args.tree_format,
             recursive_format: args.recursive_format,
-            include_dir_sizes: args.include_dirs,
+            include_dir_sizes: needs_directory_sizes(args),
             dirs_only: args.dirs_only,
             files_only: args.files_only,
             symlinks_only: args.symlinks_only,
@@ -981,4 +1002,94 @@ fn canonicalize_path_for_cache(path: &str) -> Option<String> {
     fs::canonicalize(path)
         .ok()
         .map(|p| p.to_string_lossy().into_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn args_with_include_dirs() -> Args {
+        Args {
+            directory: ".".to_string(),
+            depth: None,
+            long_format: false,
+            tree_format: false,
+            table_format: false,
+            grid_format: false,
+            grid_ignore: false,
+            sizemap_format: false,
+            timeline_format: false,
+            git_format: false,
+            fuzzy_format: false,
+            recursive_format: false,
+            show_icons: false,
+            no_color: true,
+            sort_by: "name".to_string(),
+            sort_reverse: false,
+            sort_dirs_first: false,
+            sort_case_sensitive: false,
+            sort_natural: false,
+            filter: None,
+            presets: Vec::new(),
+            size_filter: None,
+            size_filter_raw: None,
+            modified_filter: None,
+            modified_filter_raw: None,
+            created_filter: None,
+            created_filter_raw: None,
+            case_sensitive: false,
+            refine_filters: Vec::new(),
+            enable_plugin: Vec::new(),
+            disable_plugin: Vec::new(),
+            plugins_dir: PathBuf::new(),
+            include_dirs: true,
+            dirs_only: false,
+            files_only: false,
+            symlinks_only: false,
+            no_dirs: false,
+            no_files: false,
+            no_symlinks: false,
+            no_dotfiles: false,
+            almost_all: false,
+            dotfiles_only: false,
+            respect_gitignore: false,
+            permission_format: "symbolic".to_string(),
+            hide_group: false,
+            relative_dates: false,
+            output_mode: OutputMode::Human,
+            command: None,
+            search: None,
+            search_context: 2,
+            search_pipelines: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn skips_directory_sizes_for_non_size_human_views() {
+        let mut args = args_with_include_dirs();
+        args.grid_format = true;
+
+        assert!(!needs_directory_sizes(&args));
+
+        let context = ListingContext::from_args(&args, &Config::default());
+        assert!(!context.include_dir_sizes);
+    }
+
+    #[test]
+    fn includes_directory_sizes_for_size_aware_views_and_outputs() {
+        let mut long_args = args_with_include_dirs();
+        long_args.long_format = true;
+        assert!(needs_directory_sizes(&long_args));
+
+        let mut json_args = args_with_include_dirs();
+        json_args.output_mode = OutputMode::Json { pretty: false };
+        assert!(needs_directory_sizes(&json_args));
+
+        let mut sorted_args = args_with_include_dirs();
+        sorted_args.sort_by = "size".to_string();
+        assert!(needs_directory_sizes(&sorted_args));
+
+        let context = ListingContext::from_args(&long_args, &Config::default());
+        assert!(context.include_dir_sizes);
+    }
 }

@@ -446,7 +446,7 @@ impl Args {
             .arg(
                 Arg::with_name("include-dirs")
                     .long("include-dirs")
-                    .help("Include directory sizes in the metadata"),
+                    .help("Include directory sizes in metadata (recursive and potentially expensive)"),
             )
             .arg(
                 Arg::with_name("dirs-only")

@@ -448,7 +448,7 @@ show_icons = {}
 
 # Whether to include directory sizes in file listings
 # When true, directory sizes will be calculated recursively
-# This may impact performance for large directories
+# This may impact performance for large directories; some views skip this when size is not used
 # Default: false
 include_dirs = {}
 
