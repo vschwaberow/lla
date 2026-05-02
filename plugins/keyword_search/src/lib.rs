@@ -121,10 +121,9 @@ impl KeywordSearchPlugin {
         let highlighted = as_24_bit_terminal_escaped(&ranges[..], false);
         let mut result = highlighted.clone();
 
-        if let Some(pattern) = RegexBuilder::new(&regex::escape(keyword))
+        if let Ok(pattern) = RegexBuilder::new(&regex::escape(keyword))
             .case_insensitive(true)
             .build()
-            .ok()
         {
             for mat in pattern.find_iter(&highlighted) {
                 let matched_text = &highlighted[mat.start()..mat.end()];
@@ -161,9 +160,9 @@ impl KeywordSearchPlugin {
             if visible_len > max_line_width {
                 let mut truncated = String::new();
                 let mut current_len = 0;
-                let mut chars = line.chars();
+                let chars = line.chars();
 
-                while let Some(c) = chars.next() {
+                for c in chars {
                     if !c.is_ascii_control() {
                         current_len += 1;
                     }

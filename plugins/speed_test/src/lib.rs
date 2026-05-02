@@ -737,7 +737,7 @@ impl SpeedTestPlugin {
                     .default(self.base.config().test_size_mb)
                     .interact_text()
                     .map_err(|e| format!("Failed to get input: {}", e))?;
-                self.base.config_mut().test_size_mb = value.max(1).min(200);
+                self.base.config_mut().test_size_mb = value.clamp(1, 200);
                 self.base.save_config().map_err(|e| e.to_string())?;
                 Ok(())
             }
