@@ -9,7 +9,7 @@ This repository uses regular CI for pull requests and a short two-action release
 
 - Triggered on pushes and pull requests to `main` when Rust sources, manifests, proto files, scripts, workflow files, package metadata, or toolchain files change.
 - Runs formatting, Clippy, tests, and release-mode build checks across Linux and macOS.
-- Clippy in CI is informational today; the release workflow treats Clippy warnings as blocking.
+- Clippy stays in regular CI; release publishing is gated by formatting, tests, validation, asset verification, and publish dry-runs.
 
 ## Prepare Release (`prepare-release.yml`)
 
@@ -36,9 +36,8 @@ This repository uses regular CI for pull requests and a short two-action release
   - tag version matches the workspace, internal dependency, and plugin versions
   - `CHANGELOG.md` has a section for the version
   - crates.io state can be resumed safely
-- Runs stricter release gates:
+- Runs release gates:
   - `cargo fmt --all -- --check`
-  - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
   - `cargo test --workspace`
 - Builds and verifies all release assets before publishing:
   - CLI binaries: `lla-linux-*`, `lla-macos-*`
