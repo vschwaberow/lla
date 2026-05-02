@@ -75,7 +75,7 @@ Register-ArgumentCompleter -Native -CommandName 'lla' -ScriptBlock {
             [CompletionResult]::new('--case-sensitive', 'case-sensitive', [CompletionResultType]::ParameterName, 'Enable case-sensitive filtering (overrides config setting)')
             [CompletionResult]::new('-R', 'R', [CompletionResultType]::ParameterName, 'Use recursive listing format')
             [CompletionResult]::new('--recursive', 'recursive', [CompletionResultType]::ParameterName, 'Use recursive listing format')
-            [CompletionResult]::new('--include-dirs', 'include-dirs', [CompletionResultType]::ParameterName, 'Include directory sizes in the metadata')
+            [CompletionResult]::new('--include-dirs', 'include-dirs', [CompletionResultType]::ParameterName, 'Include directory sizes in metadata (recursive and potentially expensive)')
             [CompletionResult]::new('--dirs-only', 'dirs-only', [CompletionResultType]::ParameterName, 'Show only directories')
             [CompletionResult]::new('--files-only', 'files-only', [CompletionResultType]::ParameterName, 'Show only regular files')
             [CompletionResult]::new('--symlinks-only', 'symlinks-only', [CompletionResultType]::ParameterName, 'Show only symbolic links')
