@@ -380,7 +380,7 @@ impl BrewPlugin {
             return Ok(());
         };
         match idx {
-            0 => self.package_info(&vec![pkg.name.clone()]),
+            0 => self.package_info(std::slice::from_ref(&pkg.name)),
             1 => {
                 let mut args = vec![pkg.name.clone()];
                 if pkg.kind == "cask" {
@@ -388,7 +388,7 @@ impl BrewPlugin {
                 }
                 self.install_package(&args)
             }
-            2 => self.upgrade_packages(&vec![pkg.name.clone()]),
+            2 => self.upgrade_packages(std::slice::from_ref(&pkg.name)),
             3 => {
                 let mut args = vec![pkg.name.clone()];
                 if pkg.kind == "cask" {
@@ -471,7 +471,7 @@ impl BrewPlugin {
             }
         }
 
-        out.sort_by(|a, b| b.score.cmp(&a.score));
+        out.sort_by_key(|hit| std::cmp::Reverse(hit.score));
         out.truncate(limit);
         out
     }
@@ -779,8 +779,8 @@ impl BrewPlugin {
             .collect();
 
         // Sort by score
-        matched_formulae.sort_by(|a, b| b.1.cmp(&a.1));
-        matched_casks.sort_by(|a, b| b.1.cmp(&a.1));
+        matched_formulae.sort_by_key(|hit| std::cmp::Reverse(hit.1));
+        matched_casks.sort_by_key(|hit| std::cmp::Reverse(hit.1));
 
         println!(
             "\n{} Search Results for '{}'",
