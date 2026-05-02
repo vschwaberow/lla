@@ -25,7 +25,7 @@ lazy_static! {
             "help",
             "help",
             "Show help information",
-            vec!["lla plugin --name file_hash --action help"],
+            ["lla plugin --name file_hash --action help"],
             |_| {
                 let mut help = HelpFormatter::new("File Hash Plugin".to_string());
                 help.add_section("Description".to_string()).add_command(
