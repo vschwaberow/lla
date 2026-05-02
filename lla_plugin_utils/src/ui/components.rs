@@ -4,6 +4,9 @@ use indicatif::{ProgressBar, ProgressStyle};
 use std::cmp;
 use std::time::Duration;
 
+type HelpCommand = (String, String, Vec<String>);
+type HelpSection = (String, Vec<HelpCommand>);
+
 pub struct Spinner {
     progress_bar: ProgressBar,
 }
@@ -34,6 +37,12 @@ impl Spinner {
     }
 }
 
+impl Default for Spinner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Drop for Spinner {
     fn drop(&mut self) {
         self.finish();
@@ -42,7 +51,7 @@ impl Drop for Spinner {
 
 pub struct HelpFormatter {
     title: String,
-    sections: Vec<(String, Vec<(String, String, Vec<String>)>)>,
+    sections: Vec<HelpSection>,
 }
 
 impl HelpFormatter {
@@ -99,17 +108,17 @@ impl HelpFormatter {
                 );
                 output.push_str("\n    ");
                 output.push_str(description);
-                output.push_str("\n");
+                output.push('\n');
 
                 if !examples.is_empty() {
                     output.push_str("\n    Examples:\n");
                     for example in examples {
                         output.push_str("      • ");
                         output.push_str(example);
-                        output.push_str("\n");
+                        output.push('\n');
                     }
                 }
-                output.push_str("\n");
+                output.push('\n');
             }
         }
 
@@ -211,6 +220,12 @@ impl List {
         output.push('─');
         output.push('\n');
         output
+    }
+}
+
+impl Default for List {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -447,7 +462,7 @@ impl LlaDialoguerTheme {
         symbols
     }
 
-    pub fn default() -> Self {
+    fn default_theme() -> Self {
         let mut colors = std::collections::HashMap::new();
         colors.insert("success".to_string(), "bright_green".to_string());
         colors.insert("info".to_string(), "cyan".to_string());
@@ -502,6 +517,12 @@ impl LlaDialoguerTheme {
         } else {
             "   ".to_string()
         }
+    }
+}
+
+impl Default for LlaDialoguerTheme {
+    fn default() -> Self {
+        Self::default_theme()
     }
 }
 

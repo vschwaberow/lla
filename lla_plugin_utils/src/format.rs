@@ -1,12 +1,14 @@
 use lla_plugin_interface::DecoratedEntry;
 use std::collections::HashMap;
 
+type FieldFormatter = dyn Fn(&DecoratedEntry) -> Option<String>;
+
 pub trait EntryFormatter {
     fn format_field(&self, entry: &DecoratedEntry, format: &str) -> Option<String>;
 }
 
 pub struct FieldFormatterBuilder {
-    formatters: HashMap<String, Box<dyn Fn(&DecoratedEntry) -> Option<String>>>,
+    formatters: HashMap<String, Box<FieldFormatter>>,
 }
 
 impl FieldFormatterBuilder {
@@ -33,7 +35,7 @@ impl FieldFormatterBuilder {
 }
 
 pub struct CustomFieldFormatter {
-    formatters: HashMap<String, Box<dyn Fn(&DecoratedEntry) -> Option<String>>>,
+    formatters: HashMap<String, Box<FieldFormatter>>,
 }
 
 impl EntryFormatter for CustomFieldFormatter {

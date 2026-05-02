@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Reworked releases into a shorter prepare-and-merge flow:
+  - `Prepare Release` now opens a conventional release-prep PR that bumps workspace, internal dependency, plugin, lockfile, and changelog versions.
+  - Merging the release-prep PR now creates the matching `vX.Y.Z` tag automatically and runs the release pipeline.
+  - Release publishing now builds and verifies all binaries, plugin archives, OS packages, themes, and checksums before publishing crates.io packages and the GitHub release.
+  - Changelog entries can now be written under `## [Unreleased]`; the prepare workflow promotes that section to the target version and leaves a fresh `## [Unreleased]` section.
+
 ## [0.5.4] - 2026-01-29
 
 ### Fixed

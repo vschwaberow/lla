@@ -20,7 +20,7 @@ fn main() -> Result<()> {
         prost_build::Config::new()
             .out_dir(&out_dir)
             .compile_protos(&["src/plugin.proto"], &["src/"])
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+            .map_err(|e| std::io::Error::other(e.to_string()))?;
 
         // Best-effort: update the checked-in bindings so users without protoc can still build.
         if let Err(e) = std::fs::create_dir_all("src/generated") {

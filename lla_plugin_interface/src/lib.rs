@@ -140,6 +140,10 @@ impl RawBuffer {
         RawBuffer { ptr, len, capacity }
     }
 
+    /// # Safety
+    ///
+    /// The buffer must have been created by `RawBuffer::from_vec`, and it must not have already
+    /// been converted back into a `Vec` or otherwise freed.
     pub unsafe fn into_vec(self) -> Vec<u8> {
         Vec::from_raw_parts(self.ptr, self.len, self.capacity)
     }

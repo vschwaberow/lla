@@ -45,6 +45,12 @@ impl<C: PluginConfig + Default> BasePlugin<C> {
     }
 }
 
+impl<C: PluginConfig + Default> Default for BasePlugin<C> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub trait ConfigurablePlugin {
     type Config: PluginConfig;
 

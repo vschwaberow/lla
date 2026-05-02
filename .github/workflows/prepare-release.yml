@@ -1,0 +1,77 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Target version, with or without the v prefix (for example v0.5.5)
+        required: true
+      changelog:
+        description: Optional fallback markdown if CHANGELOG.md has no [Unreleased] section
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    name: Open Release Prep PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Prepare release files
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          chmod +x .github/scripts/prepare_release.sh
+          .github/scripts/prepare_release.sh
+          cargo metadata --format-version 1 >/dev/null
+
+      - name: Validate prepared release
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          source .github/scripts/release_helpers.sh
+          validate_release_versions "$VERSION"
+          validate_changelog_section "$VERSION"
+          cargo fmt --all -- --check
+          cargo check --workspace
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "chore: prepare release ${{ startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version) }}"
+          title: "chore: prepare release ${{ startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version) }}"
+          body: |
+            This PR prepares the release by updating:
+
+            - workspace and package versions
+            - internal crate dependency versions
+            - plugin crate versions
+            - Cargo.lock
+            - CHANGELOG.md
+
+            After this PR merges, create and push the matching tag to start the release workflow.
+          branch: "prepare-release-${{ startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version) }}"
+          delete-branch: true
+          labels: |
+            release
+            automation

@@ -1,43 +1,73 @@
 # GitHub Workflows Overview
 
-This repository uses a staged workflow strategy so CI runs only when it matters and releases append assets incrementally without rebuilding what already exists.
+This repository uses regular CI for pull requests and a short two-action release process:
+
+1. Open a generated release-prep PR that updates every version surface.
+2. Merge it; the release workflow creates the matching `vX.Y.Z` tag and publishes.
 
 ## CI (`ci.yml`)
-- Triggered on pushes and pull requests to `main` **only** when Rust sources, manifests, proto files, scripts, or the CI definition itself change.
-- Runs formatting, Clippy (non-blocking), tests, and a release-mode build matrix (Linux + macOS, multiple targets).
-- Eliminating docs/completions-only triggers keeps CI fast and avoids redundant runners.
 
-## Release Chain
-The release process is split into four independent workflows that communicate via `repository_dispatch` events. Each stage checks the GitHub Release for previously uploaded assets and skips work when everything is already present.
+- Triggered on pushes and pull requests to `main` when Rust sources, manifests, proto files, scripts, workflow files, package metadata, or toolchain files change.
+- Runs formatting, Clippy, tests, and release-mode build checks across Linux and macOS.
+- Clippy in CI is informational today; the release workflow treats Clippy warnings as blocking.
 
-1. **`release.yml` – Release Core Bins**
-   - Starts when a release PR (with the `release` label) merges into `main`, or via manual `workflow_dispatch`.
-   - Ensures the version changed, builds the core binaries matrix, publishes crates to crates.io, and creates/updates the GitHub Release with notes + SHA256 sums.
-   - Uploads only missing binaries/checksums and dispatches `release-plugins` when done.
+## Prepare Release (`prepare-release.yml`)
 
-2. **`release-plugins.yml` – Release Plugins**
-   - Triggered by the dispatch from the core workflow (or manually).
-   - Rebuilds plugin archives per target only when the release lacks the corresponding `.tar.gz`/`.zip`.
-   - Uploads the missing archives and dispatches `release-packages`.
+- Started manually from **Run workflow**.
+- Inputs:
+  - `version`: target version with or without a `v` prefix, for example `v0.5.5`.
+  - `changelog`: optional fallback markdown if `CHANGELOG.md` has no `## [Unreleased]` section.
+- Opens a PR with a conventional commit such as `chore: prepare release v0.5.5`.
+- Updates:
+  - root workspace version in `Cargo.toml`
+  - explicit internal dependency versions in `lla/Cargo.toml` and `lla_plugin_utils/Cargo.toml`
+  - every `plugins/*/Cargo.toml` package version
+  - `Cargo.lock`
+  - `CHANGELOG.md`, by promoting `## [Unreleased]` into `## [X.Y.Z] - YYYY-MM-DD` and leaving a fresh empty `## [Unreleased]` section
 
-3. **`release-packages.yml` – Release Packages**
-   - Downloads the Linux binaries directly from the release, runs nFPM to produce `.deb`, `.rpm`, `.apk`, `.pkg.tar.zst`, and uploads any missing package artifacts.
-   - Dispatches `release-themes` once packaging succeeds.
+## Release (`release.yml`)
 
-4. **`release-themes.yml` – Release Themes**
-   - Zips the `themes/` directory and uploads `themes.zip` only if it does not already exist on the release.
+- Triggered when a release-prep PR with the `release` label is merged into `main`.
+- Also triggered by pushing a tag that matches `v*.*.*`.
+- Can be rerun manually with `workflow_dispatch` and an existing `release_tag`.
+- Validates before doing release work:
+  - tag is semver with a `v` prefix
+  - tag commit is reachable from `main`
+  - tag version matches the workspace, internal dependency, and plugin versions
+  - `CHANGELOG.md` has a section for the version
+  - crates.io state can be resumed safely
+- Runs stricter release gates:
+  - `cargo fmt --all -- --check`
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+  - `cargo test --workspace`
+- Builds and verifies all release assets before publishing:
+  - CLI binaries: `lla-linux-*`, `lla-macos-*`
+  - plugin archives: `plugins-*.tar.gz` and `plugins-*.zip`
+  - Linux packages: `.deb`, `.rpm`, `.apk`, `.pkg.tar.zst`
+  - `themes.zip`
+  - final `SHA256SUMS`
+- Publishes crates.io packages in dependency order:
+  - `lla_plugin_interface`
+  - `lla_plugin_utils`
+  - `lla`
+- Runs `cargo publish --dry-run` immediately before each crate publish; dependent crates are dry-run only after their internal dependencies are visible on crates.io.
+- Creates or updates the GitHub release as a draft, uploads verified assets, verifies uploaded assets, then publishes the release.
 
-### Helper Script
-`.github/scripts/release_helpers.sh` provides reusable functions:
-- `ensure_release_exists` – create/edit releases safely.
-- `asset_exists` – check if an asset is already attached.
-- `dispatch_next_stage` – emit the next `repository_dispatch` event with tag + version payload.
-Every workflow sources this script to guarantee idempotent uploads and clean chaining.
+## Manual Release Checklist
 
-## Manual Dispatch Tips
-- To resume a stage, open the desired workflow and use **Run workflow** supplying `release_tag` (e.g., `v1.2.3`). `release_version` defaults to the tag without `v` when omitted.
-- Each workflow will validate the release exists and skip gracefully if all assets are already present.
+1. Add release notes under `## [Unreleased]` in `CHANGELOG.md`.
+2. Run **Prepare Release** with the target version.
+3. Review and merge the generated `chore: prepare release vX.Y.Z` PR.
+4. Watch the **Release** workflow; it creates the matching tag automatically.
+5. If the workflow fails after partial publishing, rerun **Release** manually with the same tag. Existing crates and release assets are skipped when safe.
 
-## Runner Requirements
-- GitHub-hosted runners already include `gh` and `jq`. For self-hosted runners, ensure both tools plus the Rust toolchain, protoc, and nFPM (for the packaging stage) are pre-installed.
+## Required Secrets
 
+- `GITHUB_TOKEN`: provided by GitHub Actions.
+- `CRATES_IO_TOKEN`: required for publishing `lla_plugin_interface`, `lla_plugin_utils`, and `lla`.
+
+## Helper Scripts
+
+- `.github/scripts/prepare_release.sh` updates release versions and changelog content for the generated PR.
+- `.github/scripts/release_helpers.sh` contains shared validation, expected asset, checksum, crates.io, and GitHub release helpers.
+- `scripts/build_plugins.sh` builds plugin dynamic libraries and produces both `.tar.gz` and `.zip` archives for each release target.

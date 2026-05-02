@@ -1,8 +1,10 @@
 use lla_plugin_interface::ActionInfo;
 use std::collections::HashMap;
 
+type ActionHandler = dyn Fn(&[String]) -> Result<(), String> + Send + Sync;
+
 pub struct Action {
-    pub handler: Box<dyn Fn(&[String]) -> Result<(), String> + Send + Sync>,
+    pub handler: Box<ActionHandler>,
     pub help: ActionHelp,
 }
 

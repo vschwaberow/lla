@@ -121,24 +121,23 @@ for crate in "${PLUGIN_CRATES[@]}"; do
 done
 
 # Create archive per-OS format
-if [[ "$OS_LABEL" == "windows" ]]; then
-  # Prefer zip on Windows; fallback to 7z if zip is unavailable
-  rm -f "$ARCHIVE_ZIP"
-  if command -v zip >/dev/null 2>&1; then
-    (cd "$STAGING_DIR" && zip -9 -r "../$(basename "$ARCHIVE_ZIP")" . >/dev/null)
-  elif command -v 7z >/dev/null 2>&1; then
-    (cd "$STAGING_DIR" && 7z a -tzip -mx=9 "../$(basename "$ARCHIVE_ZIP")" . >/dev/null)
-  else
-    echo "Neither zip nor 7z found on PATH for Windows packaging" 1>&2
-    exit 1
-  fi
-  echo "Created archive: $ARCHIVE_ZIP"
-else
+if [[ "$OS_LABEL" != "windows" ]]; then
   rm -f "$ARCHIVE_TGZ"
   tar -C "$STAGING_DIR" -czf "$ARCHIVE_TGZ" .
   echo "Created archive: $ARCHIVE_TGZ"
 fi
 
-echo "Done."
+# Always create a zip archive as a portable fallback for installers and manual downloads.
+rm -f "$ARCHIVE_ZIP"
+if command -v zip >/dev/null 2>&1; then
+  (cd "$STAGING_DIR" && zip -9 -r "../$(basename "$ARCHIVE_ZIP")" . >/dev/null)
+elif command -v 7z >/dev/null 2>&1; then
+  (cd "$STAGING_DIR" && 7z a -tzip -mx=9 "../$(basename "$ARCHIVE_ZIP")" . >/dev/null)
+else
+  echo "Neither zip nor 7z found on PATH for plugin packaging" 1>&2
+  exit 1
+fi
+echo "Created archive: $ARCHIVE_ZIP"
 
+echo "Done."
 
