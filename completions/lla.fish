@@ -37,7 +37,7 @@ complete -c lla -n "__fish_use_subcommand" -l sort-case-sensitive -d 'Enable cas
 complete -c lla -n "__fish_use_subcommand" -l sort-natural -d 'Use natural sorting for numbers (overrides config setting)'
 complete -c lla -n "__fish_use_subcommand" -s c -l case-sensitive -d 'Enable case-sensitive filtering (overrides config setting)'
 complete -c lla -n "__fish_use_subcommand" -s R -l recursive -d 'Use recursive listing format'
-complete -c lla -n "__fish_use_subcommand" -l include-dirs -d 'Include directory sizes in the metadata'
+complete -c lla -n "__fish_use_subcommand" -l include-dirs -d 'Include directory sizes in metadata (recursive and potentially expensive)'
 complete -c lla -n "__fish_use_subcommand" -l dirs-only -d 'Show only directories'
 complete -c lla -n "__fish_use_subcommand" -l files-only -d 'Show only regular files'
 complete -c lla -n "__fish_use_subcommand" -l symlinks-only -d 'Show only symbolic links'

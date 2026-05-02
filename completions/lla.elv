@@ -72,7 +72,7 @@ set edit:completion:arg-completer[lla] = {|@words|
             cand --case-sensitive 'Enable case-sensitive filtering (overrides config setting)'
             cand -R 'Use recursive listing format'
             cand --recursive 'Use recursive listing format'
-            cand --include-dirs 'Include directory sizes in the metadata'
+            cand --include-dirs 'Include directory sizes in metadata (recursive and potentially expensive)'
             cand --dirs-only 'Show only directories'
             cand --files-only 'Show only regular files'
             cand --symlinks-only 'Show only symbolic links'

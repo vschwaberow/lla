@@ -69,7 +69,7 @@ _lla() {
 '--case-sensitive[Enable case-sensitive filtering (overrides config setting)]' \
 '-R[Use recursive listing format]' \
 '--recursive[Use recursive listing format]' \
-'--include-dirs[Include directory sizes in the metadata]' \
+'--include-dirs[Include directory sizes in metadata (recursive and potentially expensive)]' \
 '--dirs-only[Show only directories]' \
 '--files-only[Show only regular files]' \
 '--symlinks-only[Show only symbolic links]' \
