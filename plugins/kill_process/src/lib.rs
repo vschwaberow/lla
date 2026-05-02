@@ -62,7 +62,7 @@ lazy_static! {
             "list",
             "list",
             "List all running processes with detailed information",
-            vec!["lla plugin --name kill_process --action list"],
+            ["lla plugin --name kill_process --action list"],
             |_| KillProcessPlugin::list_action()
         );
 
@@ -71,7 +71,7 @@ lazy_static! {
             "kill",
             "kill",
             "Interactively select and kill a process",
-            vec!["lla plugin --name kill_process --action kill"],
+            ["lla plugin --name kill_process --action kill"],
             |_| KillProcessPlugin::kill_action(false)
         );
 
@@ -80,7 +80,7 @@ lazy_static! {
             "force-kill",
             "force-kill",
             "Forcefully terminate a process (SIGKILL on Unix, /F on Windows)",
-            vec!["lla plugin --name kill_process --action force-kill"],
+            ["lla plugin --name kill_process --action force-kill"],
             |_| KillProcessPlugin::kill_action(true)
         );
 
@@ -89,7 +89,7 @@ lazy_static! {
             "kill-by-name",
             "kill-by-name <name>",
             "Kill processes matching a specific name pattern",
-            vec![
+            [
                 "lla plugin --name kill_process --action kill-by-name --args chrome",
                 "lla plugin --name kill_process --action kill-by-name --args firefox"
             ],
@@ -101,7 +101,7 @@ lazy_static! {
             "force-kill-by-name",
             "force-kill-by-name <name>",
             "Forcefully kill processes matching a specific name pattern",
-            vec!["lla plugin --name kill_process --action force-kill-by-name --args chrome"],
+            ["lla plugin --name kill_process --action force-kill-by-name --args chrome"],
             |args| KillProcessPlugin::kill_by_name_action(args, true)
         );
 
@@ -110,7 +110,7 @@ lazy_static! {
             "kill-by-pid",
             "kill-by-pid <pid>",
             "Kill a specific process by its PID",
-            vec!["lla plugin --name kill_process --action kill-by-pid --args 1234"],
+            ["lla plugin --name kill_process --action kill-by-pid --args 1234"],
             |args| KillProcessPlugin::kill_by_pid_action(args, false)
         );
 
@@ -119,7 +119,7 @@ lazy_static! {
             "force-kill-by-pid",
             "force-kill-by-pid <pid>",
             "Forcefully kill a specific process by its PID",
-            vec!["lla plugin --name kill_process --action force-kill-by-pid --args 1234"],
+            ["lla plugin --name kill_process --action force-kill-by-pid --args 1234"],
             |args| KillProcessPlugin::kill_by_pid_action(args, true)
         );
 
@@ -128,7 +128,7 @@ lazy_static! {
             "help",
             "help",
             "Show help information",
-            vec!["lla plugin --name kill_process --action help"],
+            ["lla plugin --name kill_process --action help"],
             |_| KillProcessPlugin::help_action()
         );
 
@@ -166,7 +166,7 @@ impl KillProcessPlugin {
             })
             .collect();
 
-        processes.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        processes.sort_by_key(|process| process.name.to_lowercase());
         processes
     }
 
@@ -360,7 +360,7 @@ impl KillProcessPlugin {
                     })
                     .collect();
 
-                scored.sort_by(|a, b| b.0.cmp(&a.0));
+                scored.sort_by_key(|item| std::cmp::Reverse(item.0));
                 filtered_processes = scored.into_iter().map(|(_, p)| p).collect();
             }
 
@@ -428,15 +428,11 @@ impl KillProcessPlugin {
                     input.pop();
                     selected_idx = 0;
                 }
-                Key::ArrowUp => {
-                    if selected_idx > 0 {
-                        selected_idx -= 1;
-                    }
+                Key::ArrowUp if selected_idx > 0 => {
+                    selected_idx = selected_idx.saturating_sub(1);
                 }
-                Key::ArrowDown => {
-                    if selected_idx < filtered_processes.len().saturating_sub(1) {
-                        selected_idx += 1;
-                    }
+                Key::ArrowDown if selected_idx < filtered_processes.len().saturating_sub(1) => {
+                    selected_idx += 1;
                 }
                 Key::Enter => {
                     term.show_cursor()
@@ -482,10 +478,7 @@ impl KillProcessPlugin {
             processes.len()
         );
 
-        let items: Vec<String> = processes
-            .iter()
-            .map(|p| Self::format_process_display(p))
-            .collect();
+        let items: Vec<String> = processes.iter().map(Self::format_process_display).collect();
 
         let theme = LlaDialoguerTheme::default();
         let prompt = if force {
